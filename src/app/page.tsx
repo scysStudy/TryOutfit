@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useGame } from "@/contexts/GameContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { ImageUploader } from "@/components/ImageUploader";
 import { CategorySelector } from "@/components/CategorySelector";
 import { GenerateButton } from "@/components/GenerateButton";
@@ -19,6 +20,8 @@ export default function HomePage() {
     generateTryOn,
     removeFromHistory,
   } = useGame();
+  
+  const { user, isAuthenticated, logout } = useAuth();
 
   const [selectedCategory, setSelectedCategory] = useState<ClothingCategory | null>(null);
 
@@ -102,6 +105,10 @@ export default function HomePage() {
     alert("订阅功能即将上线！");
   }, []);
 
+  const handleLogout = useCallback(async () => {
+    await logout();
+  }, [logout]);
+
   const canGenerate =
     state.personImage && state.clothingImage && selectedCategory && !state.isGenerating;
 
@@ -113,7 +120,29 @@ export default function HomePage() {
             <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               衣服试穿
             </h1>
-            <CreditsDisplay credits={state.credits} onSubscribe={handleSubscribe} />
+            <div className="flex items-center gap-4">
+              <CreditsDisplay credits={state.credits} onSubscribe={handleSubscribe} />
+              {isAuthenticated ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-700">
+                    {user?.username}
+                  </span>
+                  <button
+                    onClick={handleLogout}
+                    className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
+                  >
+                    登出
+                  </button>
+                </div>
+              ) : (
+                <a
+                  href="/login"
+                  className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  登录
+                </a>
+              )}
+            </div>
           </div>
         </div>
       </header>
