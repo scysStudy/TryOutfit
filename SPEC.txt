@@ -205,3 +205,20 @@ V1 的首要成功指标不是一次生成率，而是 重复使用率。
 
 
 
+
+连接字符串
+postgresql://neondb_owner:npg_FXkY5Tb3gRpQ@ep-raspy-wind-amfqclh1-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+
+
+用户表tryoutfit_users 字段如下
+
+id SERIAL PRIMARY KEY
+email VARCHAR(255) NOT NULL
+username VARCHAR(50) UNIQUE
+created_at TIMESTAMP DEFAULTnow()
+password VARCHAR(20) NOT NULL DEFAULT 123456
+
+该项目需要新增一个登录和注册功能，新增一个登录和注册页面，首页右上角新增一个登录按钮，点击按钮跳转到登录页登录，
+登录页有注册按钮，点击注册可以直接跳转到注册页面进行注册，注册成功跳转回登录页面继续登录，登录成功之后右上角显示用户名，首页不强制登录，未登录也可以使用
+
+
