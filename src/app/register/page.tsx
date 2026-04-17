@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import { Turnstile } from '@marsidev/react-turnstile'
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { register, isAuthenticated } = useAuth();
@@ -26,7 +28,11 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const result = await register(email, username, password);
+      if (!turnstileToken) {
+        setError('请完成人机验证');
+        return;
+      }
+      const result = await register(email, username, password, turnstileToken);
       if (result.success) {
         // 注册成功后跳转到登录页面
         router.push('/login');
@@ -98,7 +104,15 @@ export default function RegisterPage() {
               placeholder="请输入密码"
             />
           </div>
-
+ 
+ {/* 在表单里面，注册按钮的上方 */}
+          <Turnstile
+            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+            onSuccess={(token) => {
+              setTurnstileToken(token)
+            }}
+          />
+          {/* 注册按钮 */}
           <button
             type="submit"
             disabled={isLoading}

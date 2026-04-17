@@ -22,7 +22,7 @@ interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
   login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  register: (email: string, username: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (email: string, username: string, password: string, turnstileToken: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
@@ -82,14 +82,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const register = useCallback(async (email: string, username: string, password: string) => {
+  const register = useCallback(async (email: string, username: string, password: string, turnstileToken: string) => {
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, username, password }),
+        body: JSON.stringify({ email, username, password, turnstileToken }),
       });
 
       const data = await response.json();
