@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { GameProvider } from "@/contexts/GameContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import CrispChat from '@/components/crisp-chat'
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,7 +18,10 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased">
         <AuthProvider>
-          <GameProvider>{children}</GameProvider>
+          <GameProvider>
+            {children}
+            <CrispChat />
+          </GameProvider>
         </AuthProvider>
       </body>
     </html>

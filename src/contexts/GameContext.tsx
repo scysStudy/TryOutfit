@@ -77,14 +77,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const setPersonImage = useCallback(
     (image: GameState["personImage"]) => {
-      if (image) dispatch({ type: "SET_PERSON_IMAGE", payload: image });
+      dispatch({ type: "SET_PERSON_IMAGE", payload: image });
     },
     []
   );
 
   const setClothingImage = useCallback(
     (image: GameState["clothingImage"]) => {
-      if (image) dispatch({ type: "SET_CLOTHING_IMAGE", payload: image });
+      dispatch({ type: "SET_CLOTHING_IMAGE", payload: image });
     },
     []
   );

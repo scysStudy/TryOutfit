@@ -45,8 +45,8 @@ export interface GameState {
 }
 
 export type GameAction =
-  | { type: "SET_PERSON_IMAGE"; payload: PersonImage }
-  | { type: "SET_CLOTHING_IMAGE"; payload: ClothingImage }
+  | { type: "SET_PERSON_IMAGE"; payload: PersonImage | null }
+  | { type: "SET_CLOTHING_IMAGE"; payload: ClothingImage | null }
   | { type: "SET_RESULT"; payload: TryOnResult }
   | { type: "ADD_TO_HISTORY"; payload: HistoryItem }
   | { type: "REMOVE_FROM_HISTORY"; payload: string }

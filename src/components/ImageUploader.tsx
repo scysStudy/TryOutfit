@@ -127,7 +127,7 @@ export function ImageUploader({
                 onImageRemove();
               }}
               className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-              disabled={disabled}
+              disabled={false}
             >
               <X size={16} />
             </button>
