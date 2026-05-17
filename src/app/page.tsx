@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ImageUploader } from "@/components/ImageUploader";
@@ -21,7 +21,7 @@ export default function HomePage() {
     removeFromHistory,
   } = useGame();
   
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, isLoading, logout, refreshUser } = useAuth();
 
   const [selectedCategory, setSelectedCategory] = useState<ClothingCategory | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -30,6 +30,7 @@ export default function HomePage() {
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [emailStatus, setEmailStatus] = useState<string | null>(null);
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
 
   const handlePersonUpload = useCallback(
     (image: typeof state.personImage) => {
@@ -144,6 +145,64 @@ export default function HomePage() {
   const handleLogout = useCallback(async () => {
     await logout();
   }, [logout]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const searchParams = new URLSearchParams(window.location.search);
+    const requestId = searchParams.get('request_id');
+    const checkoutId = searchParams.get('checkout_id');
+
+    if (!requestId || !checkoutId) {
+      return;
+    }
+
+    if (isLoading) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setPaymentStatus('检测到支付回跳参数，但当前未登录，无法完成订单确认。请登录后重试。');
+      return;
+    }
+
+    const confirmPayment = async () => {
+      try {
+        const response = await fetch('/api/payments/confirm', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            request_id: requestId,
+            checkout_id: checkoutId,
+            order_id: searchParams.get('order_id'),
+            customer_id: searchParams.get('customer_id'),
+            subscription_id: searchParams.get('subscription_id'),
+            product_id: searchParams.get('product_id'),
+            signature: searchParams.get('signature'),
+          }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data?.error || '订单确认失败');
+        }
+
+        await refreshUser();
+        setPaymentStatus('支付成功，会员状态已更新。');
+      } catch (error) {
+        const message = error instanceof Error ? error.message : '未知错误';
+        setPaymentStatus(`支付回跳处理失败：${message}`);
+      } finally {
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    };
+
+    void confirmPayment();
+  }, [isAuthenticated, isLoading, refreshUser]);
 
   const handleSendEmail = useCallback(async () => {
     setIsSendingEmail(true);
@@ -273,6 +332,11 @@ export default function HomePage() {
         {emailStatus && (
           <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm">
             {emailStatus}
+          </div>
+        )}
+        {paymentStatus && (
+          <div className="mb-4 p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700 text-sm">
+            {paymentStatus}
           </div>
         )}
         {state.error && (
