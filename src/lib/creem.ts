@@ -7,7 +7,6 @@ export interface CreateCreemCheckoutPayload {
   successUrl: string;
   requestId?: string;
   metadata?: Record<string, unknown>;
-  customerEmail?: string;
 }
 
 export function getCreemBaseUrl() {
@@ -30,10 +29,6 @@ export async function createCreemCheckoutSession(payload: CreateCreemCheckoutPay
   }
   if (payload.metadata && Object.keys(payload.metadata).length > 0) {
     requestBody.metadata = payload.metadata;
-  }
-  // 某些账户配置下 customer 字段校验更严格，默认不发送，避免 400。
-  if (payload.customerEmail) {
-    requestBody.customer_email = payload.customerEmail;
   }
 
   const response = await fetch(`${getCreemBaseUrl()}/checkouts`, {

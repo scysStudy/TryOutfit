@@ -52,7 +52,6 @@ export async function POST(request: NextRequest) {
         successUrl,
         requestId: orderNo,
         metadata,
-        customerEmail: user.email,
       });
     } catch (error) {
       await query(
