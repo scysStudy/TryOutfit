@@ -92,7 +92,26 @@ export async function POST(request: NextRequest) {
   const currency = asString(payment.currency) || asString(eventData.currency);
   const status = mapCreemEventToOrderStatus(eventType);
 
-  const orderCandidate = orderNo || `WB-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+  let existingOrderNo: string | null = null;
+  let existingUserId: number | null = null;
+  if (!orderNo && checkoutId) {
+    const existingOrder = await query(
+      `SELECT order_no, user_id
+       FROM tryoutfit_orders
+       WHERE checkout_id = $1
+       ORDER BY id DESC
+       LIMIT 1`,
+      [checkoutId]
+    );
+
+    if (existingOrder.rows.length > 0) {
+      existingOrderNo = existingOrder.rows[0].order_no as string;
+      existingUserId = (existingOrder.rows[0].user_id as number | null) ?? null;
+    }
+  }
+
+  const orderCandidate =
+    orderNo || existingOrderNo || `WB-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 
   const upsertResult = await query(
     `INSERT INTO tryoutfit_orders (
@@ -153,7 +172,7 @@ export async function POST(request: NextRequest) {
     const periodEnd = resolvePeriodEndDate(eventData);
     const metadataUserId = asString(metadata.userId) || asString(metadata.referenceId);
     const orderUserId = upsertResult.rows[0]?.user_id;
-    const userId = metadataUserId ? Number(metadataUserId) : orderUserId;
+    const userId = metadataUserId ? Number(metadataUserId) : orderUserId || existingUserId;
 
     if (userId && Number.isFinite(userId)) {
       await query(

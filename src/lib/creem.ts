@@ -92,15 +92,33 @@ export function extractCheckoutId(data: Record<string, unknown>) {
 }
 
 export function verifyCreemWebhookSignature(rawBody: string, signature: string, secret: string) {
-  const computed = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
-  const signatureBuffer = Buffer.from(signature, 'utf8');
-  const computedBuffer = Buffer.from(computed, 'utf8');
+  const computed = crypto.createHmac('sha256', secret).update(rawBody).digest('hex').toLowerCase();
 
-  if (signatureBuffer.length !== computedBuffer.length) {
+  const candidates = signature
+    .split(',')
+    .map((part) => part.trim())
+    .flatMap((part) => {
+      if (part.includes('=')) {
+        const value = part.split('=').slice(1).join('=').trim();
+        return [value, part.trim()];
+      }
+      return [part];
+    })
+    .map((part) => part.toLowerCase())
+    .filter((part) => /^[a-f0-9]{64}$/.test(part));
+
+  if (candidates.length === 0) {
     return false;
   }
 
-  return crypto.timingSafeEqual(signatureBuffer, computedBuffer);
+  const computedBuffer = Buffer.from(computed, 'utf8');
+  return candidates.some((candidate) => {
+    const signatureBuffer = Buffer.from(candidate, 'utf8');
+    if (signatureBuffer.length !== computedBuffer.length) {
+      return false;
+    }
+    return crypto.timingSafeEqual(signatureBuffer, computedBuffer);
+  });
 }
 
 export function mapCreemEventToOrderStatus(eventType: string) {

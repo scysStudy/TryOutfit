@@ -50,6 +50,9 @@ export async function POST(request: NextRequest) {
       checkoutData = await createCreemCheckoutSession({
         productId,
         successUrl,
+        requestId: orderNo,
+        metadata,
+        customerEmail: user.email,
       });
     } catch (error) {
       await query(
