@@ -6,16 +6,9 @@ export interface User {
   id: number;
   email: string;
   username: string;
-  created_at: Date;
-}
-
-function verifyToken(token: string): User | null {
-  try {
-    const decoded = JSON.parse(atob(token.split('.')[1]));
-    return decoded;
-  } catch (error) {
-    return null;
-  }
+  created_at?: Date;
+  membership?: string | null;
+  membership_expiry_date?: string | Date | null;
 }
 
 interface AuthContextValue {
@@ -37,16 +30,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('token='))
-          ?.split('=')[1];
+        const response = await fetch('/api/auth/me', {
+          method: 'GET',
+          credentials: 'include',
+        });
 
-        if (token) {
-          const decodedUser = verifyToken(token);
-          if (decodedUser) {
-            setUser(decodedUser);
-          }
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+        if (data?.user) {
+          setUser(data.user as User);
         }
       } catch (error) {
         console.error('检查认证状态失败:', error);

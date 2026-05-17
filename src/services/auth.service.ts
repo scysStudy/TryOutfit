@@ -7,6 +7,8 @@ export interface User {
   email: string;
   username: string;
   created_at: Date;
+  membership?: string | null;
+  membership_expiry_date?: string | Date | null;
 }
 
 export interface LoginResponse {
@@ -64,7 +66,13 @@ export async function login(username: string, password: string): Promise<LoginRe
 
     // 生成JWT token
     const token = jwt.sign(
-      { id: user.id, email: user.email, username: user.username },
+      {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        membership: user.membership ?? null,
+        membership_expiry_date: user.membership_expiry_date ?? null,
+      },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '7d' }
     );
@@ -75,6 +83,8 @@ export async function login(username: string, password: string): Promise<LoginRe
         email: user.email,
         username: user.username,
         created_at: user.created_at,
+        membership: user.membership ?? null,
+        membership_expiry_date: user.membership_expiry_date ?? null,
       },
       token,
     };

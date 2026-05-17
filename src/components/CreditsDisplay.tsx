@@ -7,9 +7,18 @@ import type { UserCredits } from "@/types";
 interface CreditsDisplayProps {
   credits: UserCredits;
   onSubscribe: () => void;
+  subscribeLabel?: string;
+  subscribeTitle?: string;
+  isSubscribing?: boolean;
 }
 
-export function CreditsDisplay({ credits, onSubscribe }: CreditsDisplayProps) {
+export function CreditsDisplay({
+  credits,
+  onSubscribe,
+  subscribeLabel = "订阅",
+  subscribeTitle,
+  isSubscribing = false,
+}: CreditsDisplayProps) {
   const hasLowCredits = credits.remaining <= 1;
   const hasNoCredits = credits.remaining === 0;
 
@@ -45,15 +54,18 @@ export function CreditsDisplay({ credits, onSubscribe }: CreditsDisplayProps) {
         <button
           type="button"
           onClick={onSubscribe}
+          title={subscribeTitle}
+          disabled={isSubscribing}
           className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors",
             hasNoCredits
               ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200",
+            isSubscribing && "opacity-60 cursor-not-allowed"
           )}
         >
           <Crown size={16} />
-          <span>订阅</span>
+          <span>{isSubscribing ? '跳转支付中...' : subscribeLabel}</span>
         </button>
       )}
       {credits.isSubscribed && (

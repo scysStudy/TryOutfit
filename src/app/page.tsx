@@ -29,6 +29,7 @@ export default function HomePage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [emailStatus, setEmailStatus] = useState<string | null>(null);
+  const [isSubscribing, setIsSubscribing] = useState(false);
 
   const handlePersonUpload = useCallback(
     (image: typeof state.personImage) => {
@@ -110,9 +111,35 @@ export default function HomePage() {
     [removeFromHistory]
   );
 
-  const handleSubscribe = useCallback(() => {
-    alert("订阅功能即将上线！");
-  }, []);
+  const handleSubscribe = useCallback(async () => {
+    if (!isAuthenticated) {
+      alert('请先登录后再订阅');
+      return;
+    }
+
+    if (isSubscribing) {
+      return;
+    }
+
+    setIsSubscribing(true);
+    try {
+      const response = await fetch('/api/payments/checkout', {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data?.checkoutUrl) {
+        throw new Error(data?.error || '创建支付会话失败');
+      }
+
+      window.location.href = data.checkoutUrl as string;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '未知错误';
+      alert(`发起支付失败：${message}`);
+      setIsSubscribing(false);
+    }
+  }, [isAuthenticated, isSubscribing]);
 
   const handleLogout = useCallback(async () => {
     await logout();
@@ -181,6 +208,14 @@ export default function HomePage() {
   const canGenerate =
     state.personImage && state.clothingImage && selectedCategory && !state.isGenerating;
 
+  const isMonthlyMember = user?.membership?.trim().toLowerCase() === 'month';
+  const monthlyExpiryText = (() => {
+    if (!isMonthlyMember || !user?.membership_expiry_date) return undefined;
+    const parsedDate = new Date(user.membership_expiry_date);
+    if (Number.isNaN(parsedDate.getTime())) return '到期日期未知';
+    return `到期日期：${new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(parsedDate)}`;
+  })();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
       <header className="bg-white shadow-sm">
@@ -202,7 +237,13 @@ export default function HomePage() {
               )}
             </div>
             <div className="flex items-center gap-4">
-              <CreditsDisplay credits={state.credits} onSubscribe={handleSubscribe} />
+              <CreditsDisplay
+                credits={state.credits}
+                onSubscribe={handleSubscribe}
+                subscribeLabel={isMonthlyMember ? '月度会员' : '订阅'}
+                subscribeTitle={monthlyExpiryText}
+                isSubscribing={isSubscribing}
+              />
               {isAuthenticated ? (
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-gray-700">
