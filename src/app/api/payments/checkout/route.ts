@@ -26,11 +26,12 @@ export async function POST(request: NextRequest) {
     }
 
     const orderNo = createOrderNo();
-    const successBaseUrl =
+    const successBaseUrl = (
       process.env.CREEM_SUCCESS_BASE_URL ||
       process.env.NEXT_PUBLIC_APP_URL ||
-      request.nextUrl.origin;
-    const successUrl = `${successBaseUrl}/?payment=success&order_no=${encodeURIComponent(orderNo)}`;
+      request.nextUrl.origin
+    ).replace(/\/$/, '');
+    const successUrl = process.env.CREEM_SUCCESS_URL || `${successBaseUrl}/`;
 
     const metadata = {
       orderNo,
